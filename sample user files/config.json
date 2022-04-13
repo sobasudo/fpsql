@@ -1,0 +1,8 @@
+{
+    "dbapi": "postgresql",
+    "username": "dev",
+    "password": "dev123",
+    "server": "localhost",
+    "port": "5432",
+    "database": "sample"
+}
