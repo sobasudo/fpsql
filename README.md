@@ -1,4 +1,8 @@
-* Create Models with Persistence
+# FPSQL
+
+A fast, fluent and functional api when working with data.
+
+ Create Models with Persistence
     * Connect to the database
         * Configure database through a json or python config file
     * Create model using builder pattern
