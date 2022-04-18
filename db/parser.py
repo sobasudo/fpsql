@@ -9,7 +9,10 @@ def create_engine_func(filepath, func):
     if config_path.exists() and not config_path.is_dir():
         with config_path.open("r") as file:
             config = func(file)
-            return create_engine(gen_config_string(config), future=True, echo=True)
+            try:
+                return create_engine(gen_config_string(config), future=True, echo=config['echo'])
+            except KeyError:
+                return create_engine(gen_config_string(config), future=True, echo=False)
     else:
         raise RuntimeError("Path to configuration file is incorrect")
 
