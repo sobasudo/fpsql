@@ -1,45 +1,62 @@
 from db.parser import json_engine, config_engine
-from sqlalchemy import Column, MetaData, Table, insert, select
+from sqlalchemy import Column, MetaData, Table, insert, select, inspect
 import sqlalchemy
 
 from utils.linear_collections import Queue
 
 
 class Database(object):
-    def __init__(self, json_config=None, config=None):
+    def __init__(self, json_config=None, config=None, test=False):
+        self.test = test
         if json_config:
             self.engine = json_engine(json_config)
         elif config:
             self.engine = config_engine(config)
         else:
             raise RuntimeError("Database not configured")
-        
-        self.__metadata = MetaData()
-        self.relations = dict()
+
+        self.__metadata = MetaData(bind=self.engine)
+        self.__relations = dict()
+
+        table_names = inspect(self.engine).get_table_names()
+        if len(table_names) > 0:
+            for name in table_names:
+                self.__relations[name] = LazyTable(self.engine, table=Table(
+                    name, self.__metadata, autoload=True), evaluated=True)
 
     def __getitem__(self, key):
-        return self.relations[key]
+        try:
+            return self.__relations[key]
+        except:
+            raise KeyError(
+                f"Table '{key}' is not defined. Call create_table to add this relation.")
 
     def create_table(self, name):
         if not name:
             raise TypeError("Table must have a name!")
-        if name in self.relations.keys():
+        if name in self.__relations.keys():
             raise RuntimeError(f"Table names must be unique. {name} exists!")
-        self.relations[name] = LazyTable(self.engine)
-        return self.relations[name]
+        self.__relations[name] = LazyTable(self.engine)
+        return self.__relations[name]
 
     def try_create(self):
-        for name, table in self.relations.items():
+        for name, table in self.__relations.items():
             table.consolidate(self.__metadata, name)
-        self.__metadata.create_all(self.engine)            
+
+        self.__metadata.create_all()
+
+    def clean_up(self):
+        if self.test:
+            self.__metadata.drop_all()
+
 
 class LazyTable(object):
 
-    def __init__(self, engine):
+    def __init__(self, engine, table=None, evaluated=False):
         self.columns = Queue()
-        self.evaluated = False
+        self.evaluated = evaluated
         self.engine = engine
-        self.table = None
+        self.table = table
 
     def col(self, name, data_type, primary_key=False, nullable=True, unique=False, constraints=None):
         self.columns.enqueue(Column(name, getattr(
@@ -54,19 +71,20 @@ class LazyTable(object):
 
     def consolidate(self, metadata, name):
         if not self.evaluated:
-                self.evaluated = True
-                self.table = Table(name, metadata, *self.get_cols())
+            self.evaluated = True
+            self.table = Table(name, metadata, *self.get_cols())
         else:
             return
-    
+
     def get_table(self):
         if self.evaluated:
             return self.table
         else:
             self.throwUndefinedStateException()
-            
+
     def throwUndefinedStateException(self):
-        raise RuntimeError("Relation undefined and/or staged. Call consolidate to try commit relation to database.")
+        raise RuntimeError(
+            "Relation undefined and/or staged. Call consolidate to try commit relation to database.")
 
     def insert(self, data):
         if not self.evaluated:
@@ -81,4 +99,3 @@ class LazyTable(object):
         with self.engine.connect() as conn:
             result = conn.execute(select(self.table))
         return [row._asdict() for row in result]
-    
