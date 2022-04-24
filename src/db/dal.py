@@ -17,14 +17,14 @@ class Database(object):
         else:
             raise RuntimeError("Database not configured")
 
-        self.__metadata = MetaData(bind=self.engine)
+        self.metadata = MetaData(bind=self.engine)
         self.__temp = dict()
         self.__relations = dict()
 
         table_names = inspect(self.engine).get_table_names()
         if len(table_names) > 0:
             for name in table_names:
-                self.__relations[name] = Table(name, self.__metadata, autoload=True)
+                self.__relations[name] = Table(name, self.metadata, autoload=True)
 
     def __getitem__(self, key):
         try:
@@ -48,15 +48,15 @@ class Database(object):
         for name, table in self.__temp.items():
             if table.evaluated:
                 continue
-            table.consolidate(self.__metadata, name)
+            table.consolidate(self.metadata, name)
             self.__relations[name] = table.get_table()
 
         self.__temp.clear()
-        self.__metadata.create_all()
+        self.metadata.create_all()
 
     def clean_up(self):
         if self.test:
-            self.__metadata.drop_all()
+            self.metadata.drop_all()
 
 
 class LazyTable(object):
