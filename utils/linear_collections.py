@@ -2,14 +2,13 @@ from utils.iterators import QueueIterator
 
 
 class Queue:
-    
+
     def __init__(self) -> None:
         self.__data = list()
 
-
     def enqueue(self, item):
         self.__data.append(item)
-    
+
     def poll(self):
         if self.size() == 0:
             raise IndexError('Queue is empty!! Populate first before polling.')
@@ -26,3 +25,6 @@ class Queue:
 
     def gen_iter(self):
         return iter(QueueIterator(self))
+
+    def __repr__(self):
+        return str([i for i in self.__data])

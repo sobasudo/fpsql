@@ -1,6 +1,12 @@
+alembic==1.7.7
 autopep8==1.6.0
+cx-Oracle==8.3.0
 greenlet==1.1.2
+Mako==1.2.0
+MarkupSafe==2.1.1
 psycopg2==2.9.3
 pycodestyle==2.8.0
+pymssql==2.2.5
+PyMySQL==1.0.2
 SQLAlchemy==1.4.35
 toml==0.10.2
