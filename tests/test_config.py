@@ -1,6 +1,6 @@
 import unittest
 import pathlib
-from db import parser
+from src.config import parser
 
 
 class TestConfigMethods(unittest.TestCase):

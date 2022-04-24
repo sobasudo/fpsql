@@ -19,7 +19,13 @@ def create_engine_func(filepath, func):
 
 def gen_config_string(config):
     if config['dbapi'] == 'sqlite':
-        return r"sqlite://"
+        try:
+            if config['source'] == 'memory':
+                return r"sqlite://"
+        
+            return f"sqlite:///{config['source']}.db"
+        except KeyError:
+            return r"sqlite://"
 
     return f"{config['dbapi']}://{config['username']}:{config['password']}@{config['server']}:{config['port']}/{config['database']}"
 
