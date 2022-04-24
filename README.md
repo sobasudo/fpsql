@@ -38,6 +38,7 @@ For JSON configs:
 
 ```python
 from db.dal import Database
+from sqlalchemy import insert
 
 db = Database(config=r"path/to/config_file.ini")
 
@@ -45,6 +46,11 @@ db.create_table('user', ondelete='CASCADE')\
                 .col('uid', 'Integer', primary_key=True)\
                 .col('name', 'String', nullable=False)
 db.try_create()
+
+with db.engine.connect() as conn:
+    conn.execute(db['user'].insert().values({'name':'Ranmal Dias'}))
+    conn.commit()
+
 ```
 
 The `Database` object can be configured by using `config` or `json_config`.
